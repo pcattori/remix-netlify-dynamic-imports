@@ -1,4 +1,5 @@
 import { useLoaderData } from "remix"
+import * as shiki from 'shiki'
 
 interface LoaderData {
     html: string
@@ -19,6 +20,7 @@ export const loader = async (): Promise<LoaderData> => {
 
     // hast
     const { default: rehypeKatex } = await import('rehype-katex')
+    const { default: rehypeShiki } = await import('@leafac/rehype-shiki')
 
     // hast -> html
     const { default: rehypeStringify } = await import('rehype-stringify')
@@ -29,6 +31,7 @@ export const loader = async (): Promise<LoaderData> => {
         .use(remarkMath)
         .use(remarkRehype)
         .use(rehypeKatex)
+        .use(rehypeShiki, { highlighter: await shiki.getHighlighter({})})
         .use(rehypeStringify)
 
     const html = await transpiler.process([
@@ -36,6 +39,12 @@ export const loader = async (): Promise<LoaderData> => {
 
         // remark-math, rehype-katex
         'Math: $f = 1$',
+
+        // rehype-shiki
+        ['```tsx',
+        'const a = 1',
+        'const b = () => a + 1',
+        '```'].join('\n'),
 
         // remark-gfm
         'Check out the footnote[^1]',
